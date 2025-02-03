@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Empréstimo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #282c34;
+            color: white;
+            margin: 50px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            background: #444;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        input, select, button {
+            margin: 10px;
+            padding: 10px;
+            width: 80%;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            background: blue;
+            color: white;
+            cursor: pointer;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Empréstimo</h1>
+        <input type="number" id="amount" placeholder="Valor do Empréstimo">
+        <input type="number" id="rate" placeholder="Taxa de Juros">
+        <select id="rateType">
+            <option value="monthly">Juros Mensais</option>
+            <option value="annual">Juros Anual</option>
+        </select>
+        <input type="number" id="months" placeholder="Número de Parcelas">
+        <button onclick="calculateLoan()">Calcular</button>
+        <h2 id="result"></h2>
+        <canvas id="chart"></canvas>
+    </div>
+    
+    <script>
+        function calculateLoan() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            let rate = parseFloat(document.getElementById('rate').value);
+            const rateType = document.getElementById('rateType').value;
+            const months = parseInt(document.getElementById('months').value);
+            
+            if (!amount || !rate || !months) {
+                alert("Por favor, preencha todos os campos corretamente.");
+                return;
+            }
+            
+            if (rateType === "annual") {
+                rate = rate / 100 / 12; // Converter taxa anual para mensal
+            } else {
+                rate = rate / 100; // Converter taxa mensal para decimal
+            }
+            
+            const monthlyPayment = (amount * rate) / (1 - Math.pow(1 + rate, -months));
+            const totalPayment = monthlyPayment * months;
+            const totalInterest = totalPayment - amount;
+            
+            document.getElementById('result').textContent = 
+                `Parcela Mensal: R$${monthlyPayment.toFixed(2)} | Total a Pagar: R$${totalPayment.toFixed(2)} | Juros Totais: R$${totalInterest.toFixed(2)}`;
+            
+            drawChart(months, monthlyPayment, totalInterest);
+        }
+        
+        function drawChart(months, monthlyPayment, totalInterest) {
+            const ctx = document.getElementById('chart').getContext('2d');
+            
+            if (window.loanChart) {
+                window.loanChart.destroy();
+            }
+            
+            window.loanChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Total Pago', 'Juros'],
+                    datasets: [{
+                        data: [(monthlyPayment * months).toFixed(2), totalInterest.toFixed(2)],
+                        backgroundColor: ['#36a2eb', '#ff6384']
+                    }]
+                }
+            });
+        }
+    </script>
+</body>
+</html>
